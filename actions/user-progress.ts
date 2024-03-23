@@ -49,5 +49,5 @@ export const upsertUserProgress = async (courseId: number) => {
 
     revalidatePath("/courses");
     revalidatePath("/learn");
-    redirect("/learn")
+    redirect("/learn");
 }
