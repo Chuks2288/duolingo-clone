@@ -2,15 +2,27 @@ import { FeedWrapper } from "@/components/feed-wrapper"
 import { StickyWrapper } from "@/components/sticky-wrapper"
 import { Header } from "./components/header"
 import { UserProgress } from "@/components/user-progress"
-import { getUnits, getUserProgress } from "@/db/queries"
+import {
+    getCourseProgress,
+    getLessonPercentage,
+    getUserProgress,
+    getUnits,
+} from "@/db/queries"
 import { redirect } from "next/navigation"
 import { Unit } from "./components/unit"
+import { lessons, lessonsRelations } from "@/db/schema"
 
 const LearnPage = async () => {
     const userProgress = await getUserProgress();
+    const courseProgress = await getCourseProgress();
+    const lessonPercentage = await getLessonPercentage();
     const units = await getUnits();
 
     if (!userProgress || !userProgress.activeCourse) {
+        redirect("/courses");
+    }
+
+    if (!courseProgress) {
         redirect("/courses");
     }
 
@@ -35,8 +47,10 @@ const LearnPage = async () => {
                         order={unit.order}
                         description={unit.description}
                         lessons={unit.lessons}
-                        activeLesson={undefined}
-                        activeLessonPercentage={0}
+                        activeLesson={courseProgress.activeLesson as typeof lessons.$inferSelect & {
+                            unit: typeof unitsSchema.$inferSelect;
+                        } | undefined}
+                        activeLessonPercentage={lessonPercentage}
                     />
                 ))
                 }
