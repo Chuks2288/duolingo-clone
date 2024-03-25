@@ -10,7 +10,6 @@ import {
 } from "@/db/queries"
 import { redirect } from "next/navigation"
 import { Unit } from "./components/unit"
-import { lessons, lessonsRelations } from "@/db/schema"
 
 const LearnPage = async () => {
     const userProgress = await getUserProgress();
@@ -47,9 +46,7 @@ const LearnPage = async () => {
                         order={unit.order}
                         description={unit.description}
                         lessons={unit.lessons}
-                        activeLesson={courseProgress.activeLesson as typeof lessons.$inferSelect & {
-                            unit: typeof unitsSchema.$inferSelect;
-                        } | undefined}
+                        activeLesson={courseProgress.activeLesson}
                         activeLessonPercentage={lessonPercentage}
                     />
                 ))
