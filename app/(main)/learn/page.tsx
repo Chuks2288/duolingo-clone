@@ -1,21 +1,42 @@
-import { FeedWrapper } from "@/components/feed-wrapper"
-import { StickyWrapper } from "@/components/sticky-wrapper"
-import { Header } from "./components/header"
-import { UserProgress } from "@/components/user-progress"
+import { redirect } from "next/navigation";
+
+// import { Promo } from "@/components/promo";
+// import { Quests } from "@/components/quests";
+import { FeedWrapper } from "@/components/feed-wrapper";
+import { UserProgress } from "@/components/user-progress";
+import { StickyWrapper } from "@/components/sticky-wrapper";
+import { lessons, units as unitsSchema } from "@/db/schema";
 import {
     getCourseProgress,
     getLessonPercentage,
-    getUserProgress,
     getUnits,
-} from "@/db/queries"
-import { redirect } from "next/navigation"
-import { Unit } from "./components/unit"
+    getUserProgress,
+    // getUserSubscription
+} from "@/db/queries";
+
+import { Unit } from "./components/unit";
+import { Header } from "./components/header";
 
 const LearnPage = async () => {
-    const userProgress = await getUserProgress();
-    const courseProgress = await getCourseProgress();
-    const lessonPercentage = await getLessonPercentage();
-    const units = await getUnits();
+    const userProgressData = getUserProgress();
+    const courseProgressData = getCourseProgress();
+    const lessonPercentageData = getLessonPercentage();
+    const unitsData = getUnits();
+    // const userSubscriptionData = getUserSubscription();
+
+    const [
+        userProgress,
+        units,
+        courseProgress,
+        lessonPercentage,
+        // userSubscription,
+    ] = await Promise.all([
+        userProgressData,
+        unitsData,
+        courseProgressData,
+        lessonPercentageData,
+        // userSubscriptionData,
+    ]);
 
     if (!userProgress || !userProgress.activeCourse) {
         redirect("/courses");
@@ -24,6 +45,8 @@ const LearnPage = async () => {
     if (!courseProgress) {
         redirect("/courses");
     }
+
+    // const isPro = !!userSubscription?.isActive;
 
     return (
         <div className="flex flex-row-reverse gap-[48px] px-6">
@@ -34,26 +57,31 @@ const LearnPage = async () => {
                     points={userProgress.points}
                     hasActiveSubscription={false}
                 />
+                {/* {!isPro && (
+                    <Promo />
+                )}
+                <Quests points={userProgress.points} /> */}
             </StickyWrapper>
             <FeedWrapper>
                 <Header title={userProgress.activeCourse.title} />
-
                 {units.map((unit: any) => (
-                    <Unit
-                        key={unit.id}
-                        title={unit.title}
-                        id={unit.id}
-                        order={unit.order}
-                        description={unit.description}
-                        lessons={unit.lessons}
-                        activeLesson={courseProgress.activeLesson}
-                        activeLessonPercentage={lessonPercentage}
-                    />
-                ))
-                }
-            </FeedWrapper >
-        </div >
-    )
-}
+                    <div key={unit.id} className="mb-10">
+                        <Unit
+                            id={unit.id}
+                            order={unit.order}
+                            description={unit.description}
+                            title={unit.title}
+                            lessons={unit.lessons}
+                            activeLesson={courseProgress.activeLesson as typeof lessons.$inferSelect & {
+                                unit: typeof unitsSchema.$inferSelect;
+                            } | undefined}
+                            activeLessonPercentage={lessonPercentage}
+                        />
+                    </div>
+                ))}
+            </FeedWrapper>
+        </div>
+    );
+};
 
 export default LearnPage;
