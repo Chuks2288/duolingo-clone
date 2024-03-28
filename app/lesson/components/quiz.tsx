@@ -1,45 +1,58 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import Confetti from "react-confetti";
 import { toast } from "sonner";
-import { useAudio, useWindowSize } from "react-use";
-
-import { upsertChallengeProgress } from "@/actions/challenge-progress";
-import { challengeOptions, challenges } from "@/db/schema";
-import { Header } from "./header";
-import { QuestionBubble } from "./question-bubble";
-import { Challenge } from "./challenge";
-import { Footer } from "./footer";
-import { reduceHearts } from "@/actions/user-progress";
 import Image from "next/image";
-import { ResultCard } from "./result-card";
+import Confetti from "react-confetti";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { useAudio, useWindowSize, useMount } from "react-use";
 
+import { reduceHearts } from "@/actions/user-progress";
+import { useHeartsModal } from "@/store/use-hearts-modal";
+import { challengeOptions, challenges, userSubscription } from "@/db/schema";
+import { usePracticeModal } from "@/store/use-practice-modal";
+import { upsertChallengeProgress } from "@/actions/challenge-progress";
+
+import { Header } from "./header";
+import { Footer } from "./footer";
+import { Challenge } from "./challenge";
+import { ResultCard } from "./result-card";
+import { QuestionBubble } from "./question-bubble";
 
 type Props = {
+    initialPercentage: number;
+    initialHearts: number;
     initialLessonId: number;
     initialLessonChallenges: (typeof challenges.$inferSelect & {
         completed: boolean;
         challengeOptions: typeof challengeOptions.$inferSelect[];
     })[];
-    initialHearts: number;
-    initialPercentage: number;
-    userSubscription: any;
-}
+    userSubscription: typeof userSubscription.$inferSelect & {
+        isActive: boolean;
+    } | null;
+};
 
 export const Quiz = ({
+    initialPercentage,
+    initialHearts,
     initialLessonId,
     initialLessonChallenges,
-    initialHearts,
-    initialPercentage,
-    userSubscription
+    userSubscription,
 }: Props) => {
+    const { onOpen: openHeartsModal } = useHeartsModal();
+    const { onOpen: openPracticeModal } = usePracticeModal();
+
+    useMount(() => {
+        if (initialPercentage === 100) {
+            openPracticeModal();
+        }
+    });
+
     const { width, height } = useWindowSize();
 
     const router = useRouter();
 
-    const [finishAudio] = useAudio({ src: "/finish.mp3", autoPlay: true })
+    const [finishAudio] = useAudio({ src: "/finish.mp3", autoPlay: true });
     const [
         correctAudio,
         _c,
@@ -54,7 +67,9 @@ export const Quiz = ({
 
     const [lessonId] = useState(initialLessonId);
     const [hearts, setHearts] = useState(initialHearts);
-    const [percentage, setPercentage] = useState(initialPercentage);
+    const [percentage, setPercentage] = useState(() => {
+        return initialPercentage === 100 ? 0 : initialPercentage;
+    });
     const [challenges] = useState(initialLessonChallenges);
     const [activeIndex, setActiveIndex] = useState(() => {
         const uncompletedIndex = challenges.findIndex((challenge) => !challenge.completed);
@@ -69,7 +84,7 @@ export const Quiz = ({
 
     const onNext = () => {
         setActiveIndex((current) => current + 1);
-    }
+    };
 
     const onSelect = (id: number) => {
         if (status !== "none") return;
@@ -104,8 +119,7 @@ export const Quiz = ({
                 upsertChallengeProgress(challenge.id)
                     .then((response) => {
                         if (response?.error === "hearts") {
-                            // openHeartsModal();
-                            console.log("missing hearts")
+                            openHeartsModal();
                             return;
                         }
 
@@ -125,8 +139,7 @@ export const Quiz = ({
                 reduceHearts(challenge.id)
                     .then((response) => {
                         if (response?.error === "hearts") {
-                            // openHeartsModal();
-                            console.log("Missing heart");
+                            openHeartsModal();
                             return;
                         }
 
@@ -140,9 +153,8 @@ export const Quiz = ({
                     .catch(() => toast.error("Something went wrong. Please try again."))
             });
         }
-    }
+    };
 
-    // TODO: Remove true
     if (!challenge) {
         return (
             <>
@@ -154,7 +166,7 @@ export const Quiz = ({
                     numberOfPieces={500}
                     tweenDuration={10000}
                 />
-                <div className="flex flex-col gap-y-4 lg:gap-y-6 max-w-lg mx-auto text-center items-center justify-center h-full">
+                <div className="flex flex-col gap-y-4 lg:gap-y-8 max-w-lg mx-auto text-center items-center justify-center h-full">
                     <Image
                         src="/finish.svg"
                         alt="Finish"
@@ -170,9 +182,8 @@ export const Quiz = ({
                         width={50}
                     />
                     <h1 className="text-xl lg:text-3xl font-bold text-neutral-700">
-                        Great job! <br /> You&apos;ve completed the lessson.
+                        Great job! <br /> You&apos;ve completed the lesson.
                     </h1>
-
                     <div className="flex items-center gap-x-4 w-full">
                         <ResultCard
                             variant="points"
@@ -190,7 +201,7 @@ export const Quiz = ({
                     onCheck={() => router.push("/learn")}
                 />
             </>
-        )
+        );
     }
 
     const title = challenge.type === "ASSIST"
@@ -199,8 +210,8 @@ export const Quiz = ({
 
     return (
         <>
-            {correctAudio}
             {incorrectAudio}
+            {correctAudio}
             <Header
                 hearts={hearts}
                 percentage={percentage}
@@ -234,6 +245,5 @@ export const Quiz = ({
                 onCheck={onContinue}
             />
         </>
-    )
-}
-
+    );
+};
