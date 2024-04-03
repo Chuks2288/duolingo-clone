@@ -11,12 +11,17 @@ import { cn } from "@/lib/utils"
 
 import { SidebarItem } from "@/components/sidebar-item";
 
+import { isAdmin } from "@/lib/admin";
+
 type Props = {
     className?: string;
 }
 export const Sidebar = ({
-    className
+    className,
+
 }: Props) => {
+
+
     return (
         <div className={cn(
             "flex h-full lg:w-[256px] lg:fixed left-0 top-0 px-4 border-r-2 flex-col",
@@ -56,6 +61,13 @@ export const Sidebar = ({
                     href="/shop"
                     iconSrc="/shop.svg"
                 />
+                {isAdmin() && (
+                    <SidebarItem
+                        label="admin"
+                        href="/admin"
+                        iconSrc="/admin.png"
+                    />
+                )}
             </div>
             <div className="p-4">
                 <ClerkLoading>
