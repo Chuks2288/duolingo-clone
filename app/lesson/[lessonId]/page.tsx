@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 
 import {
     getLesson,
-    getUserProgress
+    getUserProgress,
+    getUserSubscription
 } from "@/db/queries"
 import { Quiz } from "../components/quiz";
 
@@ -17,6 +18,7 @@ const LessonIdPage = async ({
 }: Props) => {
     const lesson = await getLesson(params.lessonId);
     const userProgress = await getUserProgress();
+    const userSubscription = await getUserSubscription();
 
 
     if (!lesson || !userProgress) {
@@ -24,7 +26,7 @@ const LessonIdPage = async ({
     };
 
     const initialPercentage = lesson.challenges
-        .filter((challenge) => challenge.completed)
+        .filter((challenge: any) => challenge.completed)
         .length / lesson.challenges.length * 100;
 
 
@@ -34,7 +36,7 @@ const LessonIdPage = async ({
             initialLessonChallenges={lesson.challenges}
             initialHearts={userProgress.hearts}
             initialPercentage={initialPercentage}
-            userSubscription={null}
+            userSubscription={userSubscription}
         />
     )
 }

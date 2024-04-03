@@ -16,7 +16,7 @@ export const UserProgress = ({
     activeCourse,
     hearts,
     points,
-    hasActiveSubscription
+    hasActiveSubscription,
 }: Props) => {
     return (
         <div className="flex items-center justify-between gap-x-2 w-full">

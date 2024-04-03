@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-// import { Promo } from "@/components/promo";
-// import { Quests } from "@/components/quests";
+import { Promo } from "@/components/promo"
+import { Quests } from "@/components/quests";
 import { FeedWrapper } from "@/components/feed-wrapper";
 import { UserProgress } from "@/components/user-progress";
 import { StickyWrapper } from "@/components/sticky-wrapper";
@@ -11,7 +11,7 @@ import {
     getLessonPercentage,
     getUnits,
     getUserProgress,
-    // getUserSubscription
+    getUserSubscription
 } from "@/db/queries";
 
 import { Unit } from "./components/unit";
@@ -22,20 +22,20 @@ const LearnPage = async () => {
     const courseProgressData = getCourseProgress();
     const lessonPercentageData = getLessonPercentage();
     const unitsData = getUnits();
-    // const userSubscriptionData = getUserSubscription();
+    const userSubscriptionData = getUserSubscription();
 
     const [
         userProgress,
         units,
         courseProgress,
         lessonPercentage,
-        // userSubscription,
+        userSubscription,
     ] = await Promise.all([
         userProgressData,
         unitsData,
         courseProgressData,
         lessonPercentageData,
-        // userSubscriptionData,
+        userSubscriptionData,
     ]);
 
     if (!userProgress || !userProgress.activeCourse) {
@@ -46,7 +46,7 @@ const LearnPage = async () => {
         redirect("/courses");
     }
 
-    // const isPro = !!userSubscription?.isActive;
+    const isPro = !!userSubscription?.isActive;
 
     return (
         <div className="flex flex-row-reverse gap-[48px] px-6">
@@ -55,12 +55,12 @@ const LearnPage = async () => {
                     activeCourse={userProgress.activeCourse}
                     hearts={userProgress.hearts}
                     points={userProgress.points}
-                    hasActiveSubscription={false}
+                    hasActiveSubscription={isPro}
                 />
-                {/* {!isPro && (
+                {!isPro && (
                     <Promo />
                 )}
-                <Quests points={userProgress.points} /> */}
+                <Quests points={userProgress.points} />
             </StickyWrapper>
             <FeedWrapper>
                 <Header title={userProgress.activeCourse.title} />
